@@ -1,1 +1,4 @@
-/target
+HIVE_API_KEY= 3PCkxe0gT2soaA8NKwEuWg==
+.env
+.env.*
+/target/
