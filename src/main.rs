@@ -1,6 +1,8 @@
+
 use axum::{
     extract::State,
     http::{header, HeaderValue, Method, StatusCode},
+    response::{Html, IntoResponse},
     routing::{get, post},
     Json, Router,
 };
@@ -48,10 +50,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = env::var("HIVE_API_KEY")
         .map_err(|_| "HIVE_API_KEY is missing from the environment")?;
 
+    // Render supplies PORT in production.
+    // Local development defaults to port 5500.
     let port: u16 = env::var("PORT")
         .ok()
         .and_then(|value| value.parse().ok())
-        .unwrap_or(10000);
+        .unwrap_or(5500);
 
     let state = AppState {
         client: Client::new(),
@@ -60,9 +64,15 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     let cors = CorsLayer::new()
         .allow_origin([
-            HeaderValue::from_static("https://shrondajeanine79-gif.github.io"),
-            HeaderValue::from_static("https://shrondajeanineco.com"),
-            HeaderValue::from_static("https://www.shrondajeanineco.com"),
+            HeaderValue::from_static(
+                "https://shrondajeanine79-gif.github.io",
+            ),
+            HeaderValue::from_static(
+                "https://shrondajeanineco.com",
+            ),
+            HeaderValue::from_static(
+                "https://www.shrondajeanineco.com",
+            ),
             HeaderValue::from_static("http://localhost:5500"),
             HeaderValue::from_static("http://127.0.0.1:5500"),
         ])
@@ -70,20 +80,42 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         .allow_headers([header::CONTENT_TYPE]);
 
     let app = Router::new()
+        // Serve the existing frontend at the root URL.
+        .route(
+            "/",
+            get(|| async {
+                match tokio::fs::read_to_string("index.html").await {
+                    Ok(contents) => {
+                        (StatusCode::OK, Html(contents)).into_response()
+                    }
+                    Err(error) => {
+                        eprintln!("Could not read index.html: {error}");
+                        (
+                            StatusCode::NOT_FOUND,
+                            "index.html was not found. Start the server from the project directory.",
+                        )
+                            .into_response()
+                    }
+                }
+            }),
+        )
+        // Check that the backend is running.
         .route("/health", get(health))
+        // Send chat prompts to Hive.
         .route("/api/chat", post(chat))
         .layer(cors)
         .with_state(state);
 
+    // Bind to all interfaces so Render can reach the server.
     let address = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(address).await?;
 
     println!("==================================");
     println!("       SHRonda STUDIO AI");
     println!("==================================");
-    println!("Web server listening on port {port}");
-    println!("Health check: /health");
-    println!("AI endpoint:  /api/chat");
+    println!("Web app:      http://localhost:{port}");
+    println!("Health check: http://localhost:{port}/health");
+    println!("AI endpoint:  http://localhost:{port}/api/chat");
 
     axum::serve(listener, app).await?;
 
@@ -109,7 +141,7 @@ async fn chat(
         ));
     }
 
-    if prompt.chars().count() > 10000 {
+    if prompt.chars().count() > 10_000 {
         return Err((
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
@@ -140,36 +172,42 @@ async fn chat(
         }))
         .send()
         .await
-        .map_err(|_| {
+        .map_err(|error| {
+            eprintln!("Hive connection error: {error}");
+
             (
                 StatusCode::BAD_GATEWAY,
                 Json(ErrorResponse {
-                    error: "Could not connect to the AI service. Please try again.".to_string(),
+                    error: "Could not connect to the AI service. Please try again."
+                        .to_string(),
                 }),
             )
         })?;
 
-    let status = response.status();
-
-    if !status.is_success() {
-        eprintln!("Hive API returned HTTP status {status}");
+    if !response.status().is_success() {
+        eprintln!("Hive API returned HTTP status {}", response.status());
 
         return Err((
             StatusCode::BAD_GATEWAY,
             Json(ErrorResponse {
-                error: "The AI service returned an error. Please try again later.".to_string(),
+                error: "The AI service returned an error. Please try again later."
+                    .to_string(),
             }),
         ));
     }
 
-    let result: serde_json::Value = response.json().await.map_err(|_| {
-        (
-            StatusCode::BAD_GATEWAY,
-            Json(ErrorResponse {
-                error: "Could not read the AI service response.".to_string(),
-            }),
-        )
-    })?;
+    let result: serde_json::Value =
+        response.json().await.map_err(|error| {
+            eprintln!("Hive response parsing error: {error}");
+
+            (
+                StatusCode::BAD_GATEWAY,
+                Json(ErrorResponse {
+                    error: "Could not read the AI service response."
+                        .to_string(),
+                }),
+            )
+        })?;
 
     let answer = result["choices"][0]["message"]["content"]
         .as_str()
@@ -177,7 +215,8 @@ async fn chat(
             (
                 StatusCode::BAD_GATEWAY,
                 Json(ErrorResponse {
-                    error: "The AI service returned an unexpected response.".to_string(),
+                    error: "The AI service returned an unexpected response."
+                        .to_string(),
                 }),
             )
         })?;

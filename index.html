@@ -1,0 +1,601 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F5F0E1">
+  <meta name="description" content="Shronda Studio AI — a creative workspace for writing, brainstorming, and building ideas.">
+  <title>Shronda Studio AI</title>
+
+  <style>
+    :root {
+      --cream: #F5F0E1;
+      --teal: #3C6E71;
+      --gold: #D4AF37;
+      --rose: #C08473;
+      --indigo: #2C2A4A;
+      --sage: #A8B2A1;
+      --white: #FFFEFA;
+      --text: #292B2B;
+      --muted: #686B67;
+      --border: #DDD7C8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--cream);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    button, textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      padding: 28px 18px;
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .brand-mark {
+      width: 43px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--teal);
+      color: var(--gold);
+      font-size: 25px;
+      font-weight: 700;
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 750;
+      line-height: 1.3;
+    }
+
+    .brand-caption {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .new-chat {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--teal);
+      border-radius: 10px;
+      background: var(--teal);
+      color: white;
+      font-weight: 650;
+    }
+
+    .side-label {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .tool-link {
+      display: block;
+      width: 100%;
+      margin-bottom: 7px;
+      padding: 11px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+    }
+
+    .tool-link:hover,
+    .tool-link.active {
+      background: #E9EDE5;
+    }
+
+    .sidebar-note {
+      margin-top: auto;
+      padding: 15px;
+      border: 1px solid #E6D9AD;
+      border-radius: 12px;
+      background: #FBF5DE;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .sidebar-note strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--teal);
+    }
+
+    .main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 19px 30px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 254, 250, 0.7);
+    }
+
+    .topbar-title {
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4B8A62;
+    }
+
+    .workspace {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 52px 26px 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .welcome {
+      margin-bottom: 32px;
+    }
+
+    .eyebrow {
+      margin-bottom: 12px;
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 5vw, 48px);
+      letter-spacing: -1.5px;
+      line-height: 1.15;
+    }
+
+    h1 span {
+      color: var(--teal);
+    }
+
+    .intro {
+      max-width: 580px;
+      margin-top: 15px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .suggestions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .suggestion {
+      min-height: 100px;
+      padding: 17px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: var(--white);
+      text-align: left;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .suggestion:hover {
+      border-color: var(--teal);
+      transform: translateY(-2px);
+    }
+
+    .suggestion strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--teal);
+      font-size: 14px;
+    }
+
+    .suggestion span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .conversation {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .message {
+      padding: 17px 19px;
+      border-radius: 14px;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      max-width: 85%;
+      background: var(--teal);
+      color: white;
+    }
+
+    .message.assistant {
+      align-self: stretch;
+      background: var(--white);
+      border: 1px solid var(--border);
+    }
+
+    .message-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .composer {
+      margin-top: auto;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--white);
+      box-shadow: 0 8px 28px rgba(44, 42, 74, 0.05);
+    }
+
+    .prompt {
+      width: 100%;
+      min-height: 90px;
+      max-height: 220px;
+      resize: vertical;
+      padding: 8px;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .composer-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #EEE9DE;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .send {
+      min-width: 100px;
+      padding: 11px 17px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--teal);
+      color: white;
+      font-weight: 700;
+    }
+
+    .send:hover {
+      background: #31595C;
+    }
+
+    .send:disabled {
+      cursor: wait;
+      opacity: 0.6;
+    }
+
+    .footer {
+      padding: 0 26px 22px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .footer strong {
+      color: var(--teal);
+    }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        display: block;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .topbar {
+        padding: 15px 18px;
+      }
+
+      .mobile-brand {
+        display: block;
+        font-weight: 750;
+      }
+
+      .workspace {
+        padding: 35px 17px 22px;
+      }
+
+      .suggestions {
+        grid-template-columns: 1fr;
+      }
+
+      .suggestion {
+        min-height: auto;
+      }
+
+      .footer {
+        padding: 0 17px 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">μ</div>
+        <div>
+          <div class="brand-name">Shronda Studio AI</div>
+          <div class="brand-caption">Create with intention.</div>
+        </div>
+      </div>
+
+      <button class="new-chat" id="newChat">+ New conversation</button>
+
+      <div>
+        <p class="side-label">Your creative studio</p>
+        <button class="tool-link active" data-prompt="Help me brainstorm a new idea.">✧ Idea Lab</button>
+        <button class="tool-link" data-prompt="Help me write an engaging social media post in a natural, direct voice.">✎ Content Creation</button>
+        <button class="tool-link" data-prompt="Help me develop my brand voice and messaging.">◇ Brand Development</button>
+        <button class="tool-link" data-prompt="Help me organize a project into clear, manageable steps.">▦ Project Planning</button>
+      </div>
+
+      <div class="sidebar-note">
+        <strong>Make room for your ideas.</strong>
+        Start with what you have. Build one step at a time.
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="mobile-brand">μ Shronda Studio AI</div>
+        <div class="topbar-title">Your creative workspace</div>
+        <div class="status">
+          <span class="status-dot"></span>
+          AI service connected
+        </div>
+      </header>
+
+      <section class="workspace">
+        <div class="welcome" id="welcome">
+          <div class="eyebrow">On purpose. With purpose.</div>
+          <h1>Your ideas deserve<br><span>room to grow.</span></h1>
+          <p class="intro">
+            Welcome to Shronda Studio AI. Bring your ideas, questions,
+            drafts, and plans. Let's turn them into something useful.
+          </p>
+        </div>
+
+        <div class="suggestions" id="suggestions">
+          <button class="suggestion" data-prompt="Give me five fresh content ideas for On Purpose With Purpose.">
+            <strong>✧ Brainstorm ideas</strong>
+            <span>Find a fresh angle for your next project or post.</span>
+          </button>
+
+          <button class="suggestion" data-prompt="Help me write a social media post that sounds natural, direct, and human.">
+            <strong>✎ Create content</strong>
+            <span>Draft a post, caption, script, or blog outline.</span>
+          </button>
+
+          <button class="suggestion" data-prompt="Help me organize a project into a practical step-by-step action plan.">
+            <strong>▦ Organize a project</strong>
+            <span>Break a big idea into achievable next steps.</span>
+          </button>
+
+          <button class="suggestion" data-prompt="Help me strengthen my brand messaging and keep it consistent.">
+            <strong>◇ Develop my brand</strong>
+            <span>Clarify your message, audience, and creative direction.</span>
+          </button>
+        </div>
+
+        <div class="conversation" id="conversation" aria-live="polite"></div>
+
+        <form class="composer" id="chatForm">
+          <textarea
+            class="prompt"
+            id="prompt"
+            maxlength="10000"
+            placeholder="What would you like to create today?"
+            aria-label="Your message"
+            required
+          ></textarea>
+
+          <div class="composer-footer">
+            <span class="hint">Enter to send · Shift + Enter for a new line</span>
+            <button class="send" id="sendButton" type="submit">Send ↗</button>
+          </div>
+        </form>
+      </section>
+
+      <footer class="footer">
+        <strong>Shronda Studio AI</strong> · Built for ideas with intention.<br>
+        AI responses can make mistakes. Review important information before using it.
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const API_URL = "https://shronda-studio-ai.onrender.com/api/chat";
+
+    const form = document.getElementById("chatForm");
+    const promptInput = document.getElementById("prompt");
+    const sendButton = document.getElementById("sendButton");
+    const conversation = document.getElementById("conversation");
+    const welcome = document.getElementById("welcome");
+    const suggestions = document.getElementById("suggestions");
+    const newChatButton = document.getElementById("newChat");
+
+    function addMessage(label, text, type) {
+      const message = document.createElement("div");
+      message.className = `message ${type}`;
+
+      const heading = document.createElement("span");
+      heading.className = "message-label";
+      heading.textContent = label;
+
+      const content = document.createElement("div");
+      content.textContent = text;
+
+      message.append(heading, content);
+      conversation.appendChild(message);
+      message.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+      return content;
+    }
+
+    async function sendPrompt(prompt) {
+      const cleanPrompt = prompt.trim();
+
+      if (!cleanPrompt || sendButton.disabled) return;
+
+      welcome.hidden = true;
+      suggestions.hidden = true;
+
+      addMessage("You", cleanPrompt, "user");
+      promptInput.value = "";
+      sendButton.disabled = true;
+      sendButton.textContent = "Thinking…";
+
+      const answerBox = addMessage(
+        "Shronda Studio AI",
+        "Working on your response…",
+        "assistant"
+      );
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ prompt: cleanPrompt })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || `Request failed (${response.status})`);
+        }
+
+        answerBox.textContent = data.answer || "The AI returned an empty response.";
+      } catch (error) {
+        answerBox.textContent =
+          "I couldn't complete that request. " +
+          (error.message || "Please try again.") +
+          "\n\nIf this is your first request after inactivity, wait a minute and try again.";
+      } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = "Send ↗";
+        promptInput.focus();
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      sendPrompt(promptInput.value);
+    });
+
+    promptInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    document.querySelectorAll("[data-prompt]").forEach((button) => {
+      button.addEventListener("click", () => {
+        promptInput.value = button.dataset.prompt;
+        promptInput.focus();
+      });
+    });
+
+    newChatButton.addEventListener("click", () => {
+      conversation.replaceChildren();
+      welcome.hidden = false;
+      suggestions.hidden = false;
+      promptInput.value = "";
+      promptInput.focus();
+    });
+  </script>
+</body>
+</html>
